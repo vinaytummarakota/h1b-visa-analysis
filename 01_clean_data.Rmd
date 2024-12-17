@@ -1,0 +1,17 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+source("helper_functions/clean_data.R")
+```
+
+```{r}
+h1b_2021_df <- clean_h1b_df("source_data/TRK_13139_FY2021.csv")
+h1b_2022_df <- clean_h1b_df("source_data/TRK_13139_FY2022.csv")
+h1b_2023_df <- clean_h1b_df("source_data/TRK_13139_FY2023.csv")
+h1b_2024_single_df <- clean_h1b_df("source_data/TRK_13139_FY2024_single_reg.csv")
+h1b_2024_multi_df <- clean_h1b_df("source_data/TRK_13139_FY2024_multi_reg.csv")
+
+h1b_full_df <- bind_rows(h1b_2021_df, h1b_2022_df, h1b_2023_df, h1b_2024_single_df, h1b_2024_multi_df)
+
+write.csv(h1b_full_df, "clean_data/h1b_FY2021_FY2024.csv", row.names = FALSE)
+```
