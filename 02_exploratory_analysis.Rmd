@@ -8,6 +8,10 @@ source("helper_functions/exploratory_analysis.R")
 h1b_df <- read.csv("clean_data/h1b_FY2021_FY2024.csv")
 ```
 
+## Context
+
+This analysis estimates lottery win rates and multiple registration rates by country, company, and age. While differences in win rates by these segments might look like evidence of discrimination, this inference is not necessarily accurate unless one can convincingly rule out confounding by degree level. 
+
 ## How does the win rate vary by country? 
 
 ```{r}
