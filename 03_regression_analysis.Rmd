@@ -1,0 +1,26 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(fixest)
+```
+
+```{r}
+h1b_df <- read.csv("clean_data/h1b_FY2021_FY2024.csv")
+edu_h1b_df <- h1b_df %>%
+  filter(!is.na(has_grad_degree) & !is.na(naics_code) & !is.na(city) & !is.na(lottery_year))
+```
+
+## How much variance in whether an applicant has an advanced degree can be explained by industry, city, and lottery year? 
+
+Dimmock, Huang, and Weisbenner (2021) circumvent the issue of missing degree level data by leveraging industry-city-year fixed effects. In particular, they find that, in an independent prevailing wage dataset, these fixed effects explain 73% of variation in whether an applicant has an advanced degree. I test whether the same is true in the present data for the subset of applicants who have degree level data (i.e. the lottery winners). 
+
+```{r}
+linear_explanatory_model <- feols(has_grad_degree ~ 1|naics_code^city^lottery_year, data = edu_h1b_df)
+summary(linear_explanatory_model)
+```
+
+```{r}
+logit_explanatory_model <- feglm(has_grad_degree ~ 1|naics_code^city^lottery_year, data = edu_h1b_df, family = "logit")
+summary(logit_explanatory_model)
+```

@@ -12,16 +12,19 @@ clean_h1b_df <- function(path, winning_statuses) {
   
   cleaned_df <- df %>%
     clean_names() %>%
-    select(country_of_nationality, ben_year_of_birth, employer_name, lottery_year, status_type, 
-           ben_multi_reg_ind, ben_education_code) %>%
+    select(country_of_nationality, ben_year_of_birth, city, state, employer_name, lottery_year, status_type, 
+           ben_multi_reg_ind, ben_education_code, naics_code) %>%
+    filter(!country_of_nationality %in% c("SGP", "CHL")) %>%
     mutate(reg_id = row_number(), 
            age_in_years = as.integer(lottery_year) - as.integer(ben_year_of_birth),
+           city = paste(city, state), 
            lottery_year = as.integer(lottery_year), 
            won_lottery = ifelse(is.na(status_type), NA, status_type == "SELECTED"), 
            had_multiple_regs = as.integer(ben_multi_reg_ind) == 1, 
-           has_grad_degree = ifelse(is.na(ben_education_code), NA, ben_education_code %in% c("G", "H", "I"))) %>%
+           naics_code = ifelse(naics_code == "", NA, substr(naics_code, 1, 2)), 
+           has_grad_degree = ifelse(ben_education_code == "", NA, ben_education_code %in% c("G", "H", "I"))) %>%
     rename(country_code = country_of_nationality) %>%
-    select(-c(ben_year_of_birth, status_type, ben_education_code))
+    select(-c(ben_year_of_birth, state, status_type, ben_education_code))
   
   return(cleaned_df)
 }

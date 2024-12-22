@@ -1,7 +1,7 @@
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-source("helper_functions/analyze_data.R")
+source("helper_functions/exploratory_analysis.R")
 ```
 
 ```{r}
@@ -20,7 +20,9 @@ country_code_mapping <- list(CAN = "Canada",
                              NPL = "Nepal", 
                              PAK = "Pakistan", 
                              PHL = "Philippines", 
-                             TWN = "Taiwan")
+                             TWN = "Taiwan", 
+                             SGP = "Singapore", 
+                             CHL = "Chile")
 
 bump_plot(h1b_df, "country_code", "Countries", "won_lottery", "Lottery Win Rates", 10, country_code_mapping, "Certain Countries Look Like They Have An Advantage In The H-1B Visa Lottery")
 ```
@@ -79,4 +81,24 @@ line_plot(h1b_df, "age_in_years", "Age", "won_lottery", "Win", 21, 50, "25-30 Ye
 ```{r}
 line_plot(h1b_df, "age_in_years", "Age", "had_multiple_regs", "Multiple Registration", 21, 50, "Multiple Registration Rates Vary By Age")
 ```
+
+## How high are lottery win rates among H-1B1 visa countries? 
+
+```{r}
+h1b1_df <- h1b_df %>%
+  filter(country_code %in% c("SGP", "CHL")) %>%
+  mutate(country_code := recode(country_code, !!!country_code_mapping)) %>%
+  group_by(lottery_year, country_code) %>%
+  summarise(win_rate = sum(won_lottery)/n(), n_obs = n())
+
+ggplot(h1b1_df, aes(x = lottery_year, y = win_rate))+
+  geom_bar(stat = "identity")+
+  expand_limits(y = c(0, 0.55))+
+  labs(x = "Lottery Year", y = "Win Rate", title = "H-1B1 Visa Applicants Don't Seem To Have Lottery Advantage", subtitle = "These applicants should have 100% lottery win rates given existing quotas.")+
+  geom_text(aes(label = glue("{round(100*win_rate, 0)}%\n(n={n_obs})")), vjust = -0.1)+
+  facet_wrap(~country_code)+
+  scale_y_continuous(labels = scales::percent_format())+
+  theme_minimal()
+```
+
 
