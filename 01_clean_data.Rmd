@@ -15,3 +15,9 @@ h1b_full_df <- bind_rows(h1b_2021_df, h1b_2022_df, h1b_2023_df, h1b_2024_single_
 
 write.csv(h1b_full_df, "clean_data/h1b_FY2021_FY2024.csv", row.names = FALSE)
 ```
+
+```{r}
+h1b_volume_df <- clean_volume_df("source_data/Total_Registrations_FY2021_FY2025.csv")
+write.csv(h1b_volume_df, "clean_data/h1b_volume_FY2021_FY2025.csv", row.names = FALSE)
+
+```

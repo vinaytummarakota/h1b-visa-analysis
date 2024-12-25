@@ -34,7 +34,7 @@ bump_plot(h1b_df, "country_code", "Countries", "won_lottery", "Lottery Win Rates
 ## How does the multiple registration rate vary by country? 
 
 ```{r}
-bump_plot(h1b_df, "country_code", "Countries", "had_multiple_regs", "Multiple Registration Rates", 10, country_code_mapping, "Certain Countries Have Higher Multiple Registration Rates In The H-1B Visa Lottery")
+line_plot_categorical(h1b_df, "country_code", "Countries", "had_multiple_regs", "Multiple Registration Rates", 10, country_code_mapping, "India Has Higher Multiple Registration Rates In The H-1B Visa Lottery")
 ```
 
 ## How does the win rate vary by company? 
@@ -69,40 +69,59 @@ bump_plot(h1b_df, "employer_name", "Companies", "won_lottery", "Lottery Win Rate
 ## How does the multiple registration rate vary by company? 
 
 ```{r}
-# note: when I plotted raw multiple registration rates instead of ranks, these companies tended to have below-average multiple registration rates
-
-bump_plot(h1b_df, "employer_name", "Companies", "had_multiple_regs", "Multiple Registration Rates", 10, company_mapping, "Multiple Registration Rates By Company Fluctuate Considerably Across Years")
+line_plot_categorical(h1b_df, "employer_name", "Companies", "had_multiple_regs", "Multiple Registration Rates", 10, company_mapping, "Multiple Registration Rates By Company Fluctuate Considerably Across Years")
 ```
 
 ## How does the win rate vary by age? 
 
 ```{r}
-line_plot(h1b_df, "age_in_years", "Age", "won_lottery", "Win", 21, 50, "25-30 Year Olds Look Like They Have An Advantage in the H-1B Visa Lottery")
+line_plot_continuous(h1b_df, "age_in_years", "Age", "won_lottery", "Win", 21, 50, "25-30 Year Olds Look Like They Have An Advantage in the H-1B Visa Lottery")
 ```
 
 ## How does the multiple registration rate vary by age? 
 
 ```{r}
-line_plot(h1b_df, "age_in_years", "Age", "had_multiple_regs", "Multiple Registration", 21, 50, "Multiple Registration Rates Vary By Age")
+line_plot_continuous(h1b_df, "age_in_years", "Age", "had_multiple_regs", "Multiple Registration", 21, 50, "Multiple Registration Rates Vary By Age")
 ```
 
-## How high are lottery win rates among H-1B1 visa countries? 
+## How has the volume of multiple registrants changed over time? 
 
 ```{r}
-h1b1_df <- h1b_df %>%
-  filter(country_code %in% c("SGP", "CHL")) %>%
-  mutate(country_code := recode(country_code, !!!country_code_mapping)) %>%
-  group_by(lottery_year, country_code) %>%
-  summarise(win_rate = sum(won_lottery)/n(), n_obs = n())
+reg_df <- read.csv("clean_data/h1b_volume_FY2021_FY2025.csv")
 
-ggplot(h1b1_df, aes(x = lottery_year, y = win_rate))+
+ggplot(reg_df, aes(x = lottery_year, y = num_registrations, group = registration_type, fill = registration_type))+
   geom_bar(stat = "identity")+
-  expand_limits(y = c(0, 0.55))+
-  labs(x = "Lottery Year", y = "Win Rate", title = "H-1B1 Visa Applicants Don't Seem To Have Lottery Advantage", subtitle = "These applicants should have 100% lottery win rates given existing quotas.")+
-  geom_text(aes(label = glue("{round(100*win_rate, 0)}%\n(n={n_obs})")), vjust = -0.1)+
-  facet_wrap(~country_code)+
-  scale_y_continuous(labels = scales::percent_format())+
+  geom_vline(xintercept = 2024.5, linetype = "dashed")+
+  labs(x = "Lottery Year (FY)", y = "# of Lottery Registrations", title = "USCIS Policy Change Substantially Reduced Multiple Registrations", caption = "Visualization: Vinay Tummarakota, @unboxpolitics\nSource: USCIS")+
+  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale()))+
+  scale_fill_discrete(name = "Registration Type")+
   theme_minimal()
 ```
+
+## How often do lottery winners have missing data on degree level? 
+
+```{r}
+missing_edu_df <- h1b_df %>%
+  filter(won_lottery == TRUE) %>%
+  group_by(lottery_year) %>%
+  summarise(missing_data_rate = sum(degree_level_is_missing)/n())
+
+ggplot(missing_edu_df, aes(x = lottery_year, y = missing_data_rate))+
+  geom_bar(stat = "identity")+
+  labs(x = "Lottery Year (FY)", y = "Missing Data Rate", title = "20-60% of Lottery Winners Don't Have Data on Degree Level", caption = "Visualization: Vinay Tummarakota, @unboxpolitics\nSource: USCIS (Obtained by Bloomberg)")+
+  scale_y_continuous(labels = percent_format())+
+  theme_minimal()
+```
+
+## Is missing degree level data disproportionately concentrated in large IT staffing firms? 
+
+```{r}
+h1b_winners_df <- h1b_df %>% 
+  filter(won_lottery == TRUE)
+
+line_plot_categorical(h1b_winners_df, "employer_name", "Companies", "degree_level_is_missing", "Missing Data Rate", 10, company_mapping, "Missing Data Rates By Company Fluctuate Considerably Across Years")
+```
+
+
 
 
