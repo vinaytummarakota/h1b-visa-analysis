@@ -122,6 +122,33 @@ h1b_winners_df <- h1b_df %>%
 line_plot_categorical(h1b_winners_df, "employer_name", "Companies", "degree_level_is_missing", "Missing Data Rate", 10, company_mapping, "Missing Data Rates By Company Fluctuate Considerably Across Years")
 ```
 
+## Were any H-1B visas given to janitors or cashiers?  
+
+```{r}
+h1b_df %>%
+  filter(petition_approved == TRUE, dot_code %in% c("211", "382") | grepl("janitor|cashier|custodia", tolower(job_title))) %>%
+  arrange(annual_salary) %>%
+  select(lottery_year, employer_name, job_title, annual_salary) %>%
+  top_n(n = 5)
+```
+
+## What fraction of H-1B visa acceptances were for salaries >=60k/year? 
+
+```{r}
+salary_df <- h1b_df %>%
+  filter(petition_approved == TRUE) %>%
+  mutate(annual_salary_above_60k = annual_salary >= 60000) %>%
+  group_by(lottery_year) %>%
+  summarise(share_annual_salary_above_60k = sum(annual_salary_above_60k, na.rm = TRUE) / n())
+
+ggplot(salary_df, aes(x = lottery_year, y = share_annual_salary_above_60k))+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label = glue("{100*round(share_annual_salary_above_60k, 3)}%"), vjust = -0.2))+
+  labs(x = "Lottery Year (FY)", y = "% Listed Salary At Least $60k/Year", title = "Vast majority of H-1B visa acceptances have listed salary\nat least $60k/year", subtitle = "Sample is limited to H-1B visa acceptances", caption = "Visualization: Vinay Tummarakota, @unboxpolitics\nSource: USCIS (Obtained by Bloomberg)")+
+  scale_y_continuous(labels = percent_format(), limits = c(0, 1.05))+
+  theme_minimal()
+```
+
 
 
 

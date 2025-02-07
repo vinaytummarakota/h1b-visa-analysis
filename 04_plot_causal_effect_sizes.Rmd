@@ -1,0 +1,176 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=8, 6)
+
+source("../../helper_functions.R")
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+```
+
+```{r native-employment}
+df <- read_excel("source_data/other_effect_sizes.xlsx") %>%
+  filter(outcome == "Native Employment")
+
+sources <- c("Table A13 of Doran, Gelber, and Isen (2022)", "Table 3 of Mahajan et al (2024)")
+notes <- c("Coefficient of -1 indicates that each H-1B worker displaces a native worker.")
+caption <- create_caption(sources, notes)
+
+ggplot(df, aes(x = study, y = effect_size, group = outcome_sub_type, col = outcome_sub_type))+
+  geom_point()+
+  geom_errorbar(aes(ymin = upper_95_conf_int, ymax = lower_95_conf_int))+
+  geom_hline(yintercept = 0, linetype = 'dashed')+
+  labs(x = "Study", y = "Impact on Native Employment", 
+       title = "H-1B Workers Do Not Significantly Impact Native Employment", caption = caption)+
+  scale_color_discrete(name = "Population")+
+  coord_flip()+
+  theme_minimal()+
+  theme(plot.caption.position = 'plot', plot.caption = element_text(hjust = 0), plot.title.position = 'plot')
+```
+```{r start-up-outcomes}
+df <- read_excel("source_data/other_effect_sizes.xlsx") %>%
+  filter(outcome == "Growth")
+
+sources <- c("Table 4 of Chen, Shieh, and Zhang (2021)", "Table 6 of Dimmock, Huang, and Weisbenner (2022)")
+notes <- c("Dimmock, Huang, and Weisbenner (2022) require that the start-up be acquired for at least $25 million.")
+caption <- create_caption(sources, notes)
+
+ggplot(df, aes(x = study, y = effect_size, group = outcome_sub_type, col = outcome_sub_type))+
+  geom_point(position = position_dodge(width = 1))+
+  geom_errorbar(aes(ymin = upper_95_conf_int, ymax = lower_95_conf_int), position = position_dodge(width = 1))+
+  geom_hline(yintercept = 0, linetype = 'dashed')+
+  labs(x = "Study", y = "Impact of 100% Lottery Win Rate on Probability of Outcome (Percentage Points)", 
+       title = "H-1B Workers Significantly Increase Start-Up Growth", caption = caption)+
+  scale_color_discrete(name = "Outcome")+
+  coord_flip()+
+  theme_minimal()+
+  theme(plot.caption.position = 'plot', plot.caption = element_text(hjust = 0), plot.title.position = 'plot')
+```
+
+
+```{r wage-bump-immigration}
+df <- read_excel("source_data/mukhopadhyay_and_oxborrow.xlsx") %>%
+  mutate(period = fct_relevel(period, relevel = c("Pre-Immigration", "Post-Immigration")))
+
+sources <- c("Table 3 of Mukhopadhyay and Oxborrow (2012)")
+notes <- c("Wage data is in terms of 2003 prices.")
+caption <- create_caption(sources, notes)
+
+ggplot(df, aes(x = period, y = wage, group = group, col = group))+
+  geom_point()+
+  geom_line()+
+  labs(x = "Time Period", y = "Hourly Wage (PPP-Adjusted)", 
+       title = "H-1B Visa Holders See Smaller Wage Bump Upon Immigrating to the US", caption = caption)+
+  scale_y_continuous(labels = scales::label_currency())+
+  scale_color_discrete(name = "Immigrant Type")+
+  theme_minimal()+
+  theme(plot.caption = element_text(hjust = 0))
+```
+
+```{r native-wages}
+# Note: The study doesn't say whether they estimate impact on log(wages) or log(1+wages), but it seems like the latter 
+#       because they talk about how leaving the firm (i.e. 0 wages) impacts the coefficients. 
+
+df <- read_excel("source_data/other_effect_sizes.xlsx") %>%
+  filter(outcome == "Wages")
+
+sources <- c("Table 6 of Mahajan et al (2024)")
+notes <- c("'Incumbent wages' are the wages of employees who already work at the company when the H-1B worker wins the lottery.", 
+           "Young (old) workers are defined as being less than (more than) 40 years of age.", 
+           "Low-tenure (high-tenure) workers are defined as having less than (more than) 3 years of working experience.")
+caption <- create_caption(sources, notes)
+
+ggplot(df, aes(x = outcome_sub_sub_type, y = effect_size, group = outcome_sub_type, col = outcome_sub_type))+
+  geom_point()+
+  geom_errorbar(aes(ymin = lower_95_conf_int, ymax = upper_95_conf_int))+
+  geom_hline(yintercept = 0, linetype = 'dashed')+
+  labs(x = "Subpopulation", y = "Impact of 100% Lottery Win Rate on Log(Wages)", 
+       title = "H-1B Workers Have Varying Impact on Incumbent Wages", caption = caption)+
+  scale_color_discrete(name = "Population")+
+  coord_flip()+
+  theme_minimal()+
+  theme(plot.caption.position = 'plot', plot.caption = element_text(hjust = 0), plot.title.position = 'plot')
+```
+
+```{r innovation}
+df <- read_excel("source_data/other_effect_sizes.xlsx") %>%
+  filter(outcome == "Innovation", outcome_sub_sub_type == "All Firms")
+
+sources <- c("Table 3 of Doran, Gelber, and Isen (2022)", "Tables 5 & 6 of Wu (2018)")
+notes <- c("Patent grant outcomes only leverage the FY 2006-2007 lotteries.", 
+           "The standard error associated with the patent application outcome is approximately zero.")
+caption <- create_caption(sources, notes)
+
+ggplot(df, aes(x = study, y = effect_size, group = outcome_sub_type, col = outcome_sub_type))+
+  geom_point(position = position_dodge(width = 1))+
+  geom_errorbar(aes(ymin = lower_95_conf_int, ymax = upper_95_conf_int), position = position_dodge(width = 1))+
+  geom_hline(yintercept = 0, linetype = 'dashed')+
+  labs(x = "Study", y = "% Change in Patents For Each H-1B Worker", 
+       title = "H-1B Workers Do Not Significantly Impact Patenting", caption = caption)+
+  scale_y_continuous(labels = scales::percent_format())+
+  scale_color_discrete(name = "Outcome")+
+  coord_flip()+
+  theme_minimal()+
+  theme(plot.caption.position = 'plot', plot.caption = element_text(hjust = 0), plot.title.position = 'plot')
+```
+
+```{r innovation-startups}
+df <- read_excel("source_data/other_effect_sizes.xlsx") %>%
+  filter(outcome == "Innovation", outcome_sub_sub_type == "Start-Ups")
+
+sources <- c("Table 3 of Chen, Shieh, and Zhang (2021)", "Table 6 of Dimmock, Huang, and Weisbenner (2022)")
+notes <- c("Patent application outcomes leverage the FY 2008-2009 and 2014-2016 lotteries.", 
+           "Patent grant outcomes only leverage the FY 2008-2009 lotteries.")
+caption <- create_caption(sources, notes)
+
+ggplot(df, aes(x = study, y = effect_size, group = outcome_sub_type, col = outcome_sub_type))+
+  geom_point(position = position_dodge(width = 1))+
+  geom_errorbar(aes(ymin = lower_95_conf_int, ymax = upper_95_conf_int), position = position_dodge(width = 1))+
+  geom_hline(yintercept = 0, linetype = 'dashed')+
+  labs(x = "Study", y = "Impact of 100% Lottery Win Rate on Log(1+Patents)", 
+       title = "H-1B Workers Significantly Increase Patenting at Start-Ups", caption = caption)+
+  scale_color_discrete(name = "Outcome")+
+  coord_flip()+
+  theme_minimal()+
+  theme(plot.caption.position = 'plot', plot.caption = element_text(hjust = 0), plot.title.position = 'plot')
+```
+
+```{r accuracy}
+df <- read_excel("source_data/frost_et_al.xlsx") %>%
+  mutate(time = fct_relevel(time, levels = c("-2", "-1", "0", "1", "2+")))
+
+sources <- c("Table 9 of Frost et al (2024)")
+notes <- c()
+caption <- create_caption(sources, notes)
+
+ggplot(df, aes(x = time, y = 100*effect_size, group = 1))+
+  geom_point()+
+  geom_line()+
+  geom_errorbar(aes(ymin = 100*(effect_size - 1.96*standard_error), ymax = 100*(effect_size + 1.96*standard_error)))+
+  geom_vline(xintercept = "0", size = 1.5, alpha = 0.2)+
+  geom_hline(yintercept = 0, linetype = 'dashed')+
+  labs(x = "Years Relative To Cap Change", y = "Impact on Probability of Restatement\n(Percentage Points)", 
+       title = "The 2004 Cap Change Increased The Probability That Firms Issued Financial Restatements", caption = caption)+
+  theme_minimal()+
+  theme(plot.caption = element_text(hjust = 0))
+```
+
+```{r ability}
+df <- read_excel("source_data/kato_and_sparber.xlsx") %>%
+  mutate(quintile = fct_relevel(quintile, levels = c("Bottom", "Second", "Middle", "Fourth", "Top")))
+
+sources <- c("Table 9 of Kato and Sparber (2013)")
+notes <- c("Quintiles were constructed using pre-2004 data.")
+caption <- create_caption(sources, notes)
+
+ggplot(df, aes(x = quintile, y = 100*effect_size, group = significant, col = significant))+
+  geom_point()+
+  geom_errorbar(aes(ymin = 100*(effect_size - 1.96*standard_error), ymax = 100*(effect_size + 1.96*standard_error)))+
+  geom_vline(xintercept = "0", size = 1.5, alpha = 0.2)+
+  geom_hline(yintercept = 0, linetype = 'dashed')+
+  labs(x = "SAT Score Quintile", y = "Impact on Percentage of International Student\nApplicants in Quintile (Percentage Points)", 
+       title = "The 2004 Cap Change Reduced The Share of International Applicants With\nThe Lowest and Highest SAT Scores", caption = caption)+
+  scale_color_manual(values = c("black", "red"))+
+  theme_minimal()+
+  theme(plot.caption = element_text(hjust = 0), legend.position = 'none')
+```
